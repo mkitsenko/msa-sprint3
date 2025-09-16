@@ -1,0 +1,88 @@
+﻿@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+
+LAYOUT_LEFT_RIGHT()
+
+System_Boundary(nova_market, "Nova Market System") {
+    Container(user_service, "Сервис пользователей", "dotnet", "Сервис работает с пользователями + Аутентификация и Авторизация")
+    Container(order_service, "Сервис заказов", "dotnet", "Сервис работает с заказами товаров")
+    Container(review_service, "Сервис отзывов", "dotnet", "Сервис работы с отзывами на товары")
+    Container(shopping_cart_service, "Сервис корзины", "dotnet", "Сервис корзины с товарами")
+    Container(goods_service, "Сервис товаров", "dotnet", "Сервис предоставляет товары")
+    Container(payment_service, "Сервис оплаты", "dotnet", "Сервис отвечает за обработку платежей")
+    Container(delivery_service, "Сервис доставки", "dotnet", "Сервис отвечает за доставку товаров")
+    Container(notification_service, "Сервис уведомлений", "dotnet", "Сервис уведомлений")
+    Container(warehouse_service, "Сервис склада", "dotnet", "Сервис отвечает за хранение товара")
+    
+    ComponentQueue(user_sb, "Топик событий Пользователь", "Apache Kafka", "Топик событий Пользователь")
+    ComponentQueue(order_sb, "Топик событий Заказы", "Apache Kafka", "Топик событий Заказы")
+    ComponentQueue(review_sb, "Топик событий Отзывы", "Apache Kafka", "Топик событий Отзывы")
+    ComponentQueue(goods_sb, "Топик событий Товары", "Apache Kafka", "Топик событий Товары")
+    ComponentQueue(payment_sb, "Топик событий Платежи", "Apache Kafka", "Топик событий Платежи")
+    ComponentQueue(delivery_sb, "Топик событий Доставка", "Apache Kafka", "Топик событий Доставка")
+    ComponentQueue(shopping_cart_sb, "Топик событий Корзина", "Apache Kafka", "Топик событий Корзина")
+    ComponentQueue(warehouse_sb, "Топик событий Склада", "Apache Kafka", "Топик событий Склада")
+    
+    ContainerDb(user_db, "БД Пользователи", "Хранит информацию о Пользователях")
+    ContainerDb(order_db, "БД Заказы", "Хранит информацию о Заказах")
+    ContainerDb(review_db, "БД Отзывы", "Хранит информацию об Отзывах")
+    ContainerDb(shopping_cart_db, "БД Корзина", "Хранит информацию о Корзине")
+    ContainerDb(goods_db, "БД Товары", "Хранит информацию о Товарах")
+    ContainerDb(payment_db, "БД Платежи", "Хранит информацию о Платежах")
+    ContainerDb(delivery_db, "БД Доставка", "Хранит информацию о Доставке")
+    ContainerDb(notification_db, "БД Уведомления", "Хранит информацию о Уведомлениях")
+    ContainerDb(warehouse_db, "БД Склада", "Хранит информацию о Товарах на складе")  
+}
+
+
+Rel(user_service, user_db, "Читает\записывает Пользователя")
+Rel(user_service, user_sb, "Публикует события Пользователь")
+
+Rel(order_service, user_service, "Читает информацию о Пользователе")
+Rel(order_service, order_db, "Читает\записывает Заказы")
+Rel(order_service, order_sb, "Публикует события Заказа")
+Rel(order_service, goods_service, "Читает информацию о Товарах")
+Rel(order_service, payment_sb, "Потребляет события Платежи")
+Rel(order_service, delivery_sb, "Потребляет события Доставки")
+Rel(order_service, user_sb, "Потребляет события Пользователя")
+Rel(order_service, delivery_service, "Читает информацию о Доставке")
+
+Rel(review_service, review_db, "Читает\записывает Отзывы")
+Rel(review_service, user_service, "Читает информацию о Пользователе")
+Rel(review_service, goods_service, "Читает информацию о Товаре")
+Rel(review_service, review_sb, "Публикует событие Отзывы")
+
+Rel(goods_service, goods_db, "Читает\записывает Товары")
+Rel(goods_service, goods_sb, "Публикует событие Товары")
+Rel(goods_service, review_sb, "Потребляет события Отзывы")
+Rel(goods_service, warehouse_service, "Читает информацию со Склада")
+Rel(goods_service, warehouse_sb, "Потребляет события Склада")
+
+Rel(payment_service, payment_db, "Читает\записывает Платежи")
+Rel(payment_service, payment_sb, "Публикует событие Платеж")
+Rel(payment_service, order_sb, "Потребляет события Заказы")
+
+Rel(delivery_service, delivery_db, "Читает\записывает Доставки")
+Rel(delivery_service, delivery_sb, "Публикует события Доставки")
+Rel(delivery_service, payment_sb, "Потребляет события Платежей")
+
+Rel(shopping_cart_service, shopping_cart_db, "Читает\записывает Корзину")
+Rel(shopping_cart_service, shopping_cart_sb, "Событие Корзины")
+Rel(shopping_cart_service, user_service, "Читает информацию о Пользователе")
+Rel(shopping_cart_service, goods_service, "Читает информацию о Товарах")
+
+Rel(notification_service, notification_db, "Читает\записывает Уведомления")
+Rel(notification_service, user_service, "Читает информацию о Пользователе")
+Rel(notification_service, payment_sb, "Потребляет события Платежей")
+Rel(notification_service, order_sb, "Потребляет события Заказов")
+Rel(notification_service, review_sb, "Потребляет события Отзывов")
+Rel(notification_service, delivery_sb, "Потребляет события Доставки")
+Rel(notification_service, user_sb, "Потребляет события Пользователя")
+
+
+Rel(warehouse_service, order_sb, "Потребляет события Заказа")
+Rel(warehouse_service, warehouse_db, "Читает\записывает Товары на складе")
+
+
+@enduml
