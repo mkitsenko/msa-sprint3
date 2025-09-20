@@ -8,11 +8,13 @@
 | Возврат средств                      | compensation | RefundSucceeded               |
 | Ошибка оплаты                        |   failure    | PaymentFailed                 |
 | Время оплаты вышло                   |   timeout    | PaymentTimeout                |
+| Заказ сформирован из корзины         |    domain    | OrderFormed                   |
 | Заказ создан                         |    domain    | OrderCreated                  |
 | Заказ отменен                        | compensation | OrderCancelled                |
 | Товар добавлен в корзину             |    domain    | ShoppingCartAdded             |
 | Товар удален из корзины              | compensation | ShoppingCartDeleted           |
 | Доставка начата                      |    domain    | DeliveryStarted               |
+| Доставка невозможна                  |    domain    | DeliveryFailed                |
 | Изменен статус доставки              |    domain    | DeliveryStatusChanged         |
 | Доставка отменена                    | compensation | DeliveryCancelled             |
 | Товар добавлен на склад              |    domain    | WarehouseGoodAdded            |
