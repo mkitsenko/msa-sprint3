@@ -5,6 +5,11 @@
 LAYOUT_LEFT_RIGHT()
 
 System_Boundary(nova_market, "Nova Market System") {
+     Person(user, "Пользователь системы", "Просмотр товаров\Заказы")
+     Person(admin, "Администратор системы", "Управление")
+     
+     Container(api_gateway, "API Gateway", "Маршрутизация запросов")
+     
     Container(user_service, "Сервис пользователей", "dotnet", "Сервис работает с пользователями + Аутентификация и Авторизация")
     Container(order_service, "Сервис заказов", "dotnet", "Сервис работает с заказами товаров")
     Container(review_service, "Сервис отзывов", "dotnet", "Сервис работы с отзывами на товары")
@@ -37,6 +42,21 @@ System_Boundary(nova_market, "Nova Market System") {
 
 Container_Ext(ext_delivery, "Служба доставки", "Система доставки")
 Container_Ext(ext_payment, "Банковский шлюз платежей", "Система оплаты на стороне банка")
+
+Container(api_gateway, "API Gateway", "Маршрутизация запросов")
+
+Rel(user, api_gateway, "Запросы к системе")
+Rel(admin, api_gateway, "Запросы к системе")
+
+Rel(api_gateway, user_service, "Маршрутизация к Пользователям")
+Rel(api_gateway, order_service, "Маршрутизация к Заказам")
+Rel(api_gateway, review_service, "Маршрутизация к Отзывы")
+Rel(api_gateway, goods_service, "Маршрутизация к Товары")
+Rel(api_gateway, payment_service, "Маршрутизация к Платежи")
+Rel(api_gateway, delivery_service, "Маршрутизация к Доставке")
+Rel(api_gateway, shopping_cart_service, "Маршрутизация к Корзина")
+Rel(api_gateway, notification_service, "Маршрутизация к Нотификациям")
+Rel(api_gateway, warehouse_service, "Маршрутизация к Склад")
 
 Rel(user_service, user_db, "Читает\записывает Пользователя")
 Rel(user_service, user_sb, "Публикует события Пользователь")
