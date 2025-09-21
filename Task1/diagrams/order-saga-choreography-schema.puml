@@ -1,0 +1,91 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+'autonumber
+'participant Сервис_Товаров as goods_service order 20
+actor Пользователь as user order 00
+participant Сервис_Заказов as order_service order 10
+participant Сервис_Склада as warehouse_service order 20
+participant Сервис_Оплаты as payment_service order 30
+participant Сервис_Нотификации as notification_service order 40
+participant Сервис_Доставки as delivery_service order 50
+
+== Успешная оплата заказа ==
+
+user -> order_service : Оформление заказа
+order_service -> warehouse_service : Событие: Заказ создан (OrderCreated)
+warehouse_service -> warehouse_service : Резервирование товаров
+order_service <- warehouse_service : Событие: Товары зарезервированы (WarehouseReserved)
+order_service -> order_service : Изменение Статуса [Заказ сформирован\Ожидает оплаты]
+order_service -> payment_service : Событие: Заказ оформлен (OrderFormed)
+payment_service -> payment_service : Проведение оплаты
+payment_service -> notification_service : Событие: Заказ оплачен (PaymentSucceeded)
+payment_service -> order_service :  Событие: Заказ оплачен (PaymentSucceeded)
+order_service -> order_service : Изменение Статуса [Заказ оплачен]
+notification_service -> user : Отправка уведомления Заказ оформлен и оплачен
+payment_service -> delivery_service :  Событие: Заказ оплачен (PaymentSucceeded)
+delivery_service -> delivery_service : Оформление Доставки
+delivery_service -> order_service : Событие: Доставка начата (DeliveryStarted)
+order_service -> order_service : Изменение Статуса [Доставка начата]
+delivery_service -> notification_service : Событие: Доставка начата (DeliveryStarted)
+notification_service -> user : Отправка уведомления Доставка оформлена
+delivery_service -> delivery_service: Изменение статуса Доставки
+delivery_service -> order_service : Событие: Изменен статус доставки (DeliveryStatusChanged)
+order_service -> order_service : Изменение Статуса [Собрано/Передано курьеру/Доставлено]
+delivery_service -> notification_service : Событие: Изменен статус доставки (DeliveryStatusChanged)
+notification_service -> user : Отправка уведомления Изменен статус доставки
+
+== Резервирование товара невозможно ==
+
+user -> order_service : Оформление заказа
+order_service -> warehouse_service : Событие: Заказ оформлен (OrderCreated)
+warehouse_service -[#red]-> warehouse_service !! : Резервирование товаров
+order_service <- warehouse_service : Событие: Ошибка резервирования (WarehouseGoodReserveFailed)
+order_service <- warehouse_service : Событие: Ошибка резервирования (WarehouseGoodReserveTimeout)
+
+
+== Оплата товара невозможна ==
+
+user -> order_service : Оформление заказа
+order_service -> warehouse_service : Событие: Заказ создан (OrderCreated)
+warehouse_service -> warehouse_service : Резервирование товаров
+order_service <- warehouse_service : Событие: Товары зарезервированы (WarehouseReserved)
+order_service -> order_service : Изменение Статуса [Заказ сформирован\Ожидает оплаты]
+order_service -> payment_service : Событие: Заказ оформлен (OrderFormed)
+payment_service -[#red]-> payment_service !! : Проведение оплаты
+payment_service -> order_service: Событие: Заказ не оплачен (PaymentFailed)
+payment_service -> order_service: Событие: Время оплаты вышло (PaymentTimeout)
+order_service -> order_service : Изменение статуса заказа
+order_service -> warehouse_service: Событие: Снятие резерва товара (WarehouseGoodReserveCancelled)
+warehouse_service -> warehouse_service: Снятие резерва товара
+payment_service -> notification_service : Событие: Заказ не оплачен (PaymentFailed)
+payment_service -> notification_service : Событие: Время оплаты вышло (PaymentTimeout)
+notification_service -> user: Отправка уведомления Оплата невозможна
+
+
+== Доставка невозможна ==
+
+user -> order_service : Оформление заказа
+order_service -> warehouse_service : Событие: Заказ создан (OrderCreated)
+warehouse_service -> warehouse_service : Резервирование товаров
+order_service <- warehouse_service : Событие: Товары зарезервированы (WarehouseReserved)
+order_service -> order_service : Изменение Статуса [Заказ сформирован\Ожидает оплаты]
+order_service -> payment_service : Событие: Заказ оформлен (OrderFormed)
+payment_service -> payment_service : Проведение оплаты
+payment_service -> notification_service : Событие: Заказ оплачен (PaymentSucceeded)
+payment_service -> order_service :  Событие: Заказ оплачен (PaymentSucceeded)
+order_service -> order_service : Изменение статуса заказа
+payment_service -> delivery_service :  Событие: Заказ оплачен (PaymentSucceeded)
+delivery_service -[#red]-> delivery_service !! : Оформление Доставки
+delivery_service -> order_service : Событие отмена Доставки (DeliveryFailed)
+order_service -> order_service : Изменение статуса заказа [Заказ отменен]
+order_service -> warehouse_service: Событие: Снятие резерва товара (WarehouseGoodReserveCancelled)
+warehouse_service -> warehouse_service: Снятие резерва товара
+order_service -> payment_service : Событие отмена заказа (OrderCancelled)
+payment_service -> payment_service : Возврат денег
+payment_service -> notification_service : Событие: Возврат денег успешен (RefundSucceeded)
+payment_service -> order_service : Событие: Возврат денег успешен (RefundSucceeded)
+order_service -> order_service : Изменение статуса заказа [Деньги возвращены]
+notification_service -> user : Отправка уведомления Возврат денег успешен
+
+@enduml
